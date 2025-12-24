@@ -1,0 +1,1499 @@
+<!--
+بخش 2: کد اصلی HTML با تمام قابلیت‌های جدید
+-->
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🚀 ALI-X TERMINAL PRO v2.0</title>
+    
+    <!-- لینک‌های استایل -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-fontface.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- کتابخانه‌های جاوااسکریپت -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <style>
+        /* استایل‌های بهینه‌شده برای موبایل */
+        :root {
+            --bg-dark: #0a0b0d;
+            --bg-panel: #131722;
+            --bg-hover: #1c2030;
+            --primary: #fcd535;
+            --accent: #3b82f6;
+            --up: #00d395;
+            --down: #ff5e5e;
+            --text-main: #ffffff;
+            --text-secondary: #848e9c;
+            --border: #2b3139;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition: 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-panel) 100%);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 60px; /* برای فوتر */
+        }
+
+        /* استایل‌های پاسخگو برای موبایل */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+            
+            .panel {
+                margin-bottom: 10px;
+            }
+            
+            .pair-stats {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .position-card {
+                flex-direction: column !important;
+            }
+        }
+
+        /* استایل‌های جدید برای بخش‌های اضافه شده */
+        .order-book {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .order-price.buy { color: var(--up); }
+        .order-price.sell { color: var(--down); }
+
+        .trading-panel {
+            background: rgba(19, 23, 34, 0.9);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+        }
+
+        .position-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .position-type.long { color: var(--up); }
+        .position-type.short { color: var(--down); }
+
+        .pnl.positive { color: var(--up); }
+        .pnl.negative { color: var(--down); }
+    </style>
+</head>
+<body>
+    <!-- بارگذاری فایل کانفیگ -->
+    <script src="config.js"></script>
+
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">در حال اتصال به سرورهای معاملاتی...</div>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                ALI-X TERMINAL PRO v2.0
+            </div>
+            
+            <div class="market-stats">
+                <div class="stat">
+                    <div class="stat-label">حجم بازار</div>
+                    <div class="stat-value" id="totalMarketCap">...</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">حجم 24h</div>
+                    <div class="stat-value" id="totalVolume">...</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">BTC Dom</div>
+                    <div class="stat-value" id="btcDominance">...</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">وضعیت</div>
+                    <div class="stat-value" id="connectionStatus">متصل</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="grid-container" style="display: grid; grid-template-columns: 300px 1fr 350px; gap: 20px; padding: 20px;">
+            
+            <!-- سایدبار سمت چپ -->
+            <aside class="sidebar">
+                <div class="panel">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="جستجوی ارز (BTC, ETH...)">
+                    </div>
+                    
+                    <div class="tabs">
+                        <button class="tab active" onclick="app.changeTab('all')">همه ارزها</button>
+                        <button class="tab" onclick="app.changeTab('gainers')">برترین‌ها</button>
+                        <button class="tab" onclick="app.changeTab('losers')">ضعیف‌ترین</button>
+                        <button class="tab" onclick="app.changeTab('signals')">سیگنال‌دار</button>
+                    </div>
+                    
+                    <div class="coin-list" id="coinList">
+                        <!-- لیست ارزها اینجا لود می‌شود -->
+                    </div>
+                </div>
+
+                <!-- دفتر سفارشات -->
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-book"></i>
+                            دفتر سفارشات
+                        </div>
+                    </div>
+                    <div class="order-book" id="orderBook">
+                        <!-- داده‌های دفتر سفارش -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- بخش مرکزی - چارت و اطلاعات -->
+            <main class="main-panel">
+                <div class="panel">
+                    <div class="chart-header">
+                        <div class="pair-info">
+                            <div class="pair-name" id="currentPair">BTC/USDT</div>
+                            <div class="pair-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                <div class="pair-stat">
+                                    <div class="pair-stat-label">قیمت فعلی</div>
+                                    <div class="pair-stat-value" id="currentPrice">$0</div>
+                                </div>
+                                <div class="pair-stat">
+                                    <div class="pair-stat-label">تغییر 24h</div>
+                                    <div class="pair-stat-value" id="priceChange">0%</div>
+                                </div>
+                                <div class="pair-stat">
+                                    <div class="pair-stat-label">بالاترین 24h</div>
+                                    <div class="pair-stat-value" id="high24h">$0</div>
+                                </div>
+                                <div class="pair-stat">
+                                    <div class="pair-stat-label">پایین‌ترین 24h</div>
+                                    <div class="pair-stat-value" id="low24h">$0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeframe-controls">
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('1m')">1M</button>
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('5m')">5M</button>
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('15m')">15M</button>
+                            <button class="timeframe-btn active" onclick="app.changeTimeframe('1h')">1H</button>
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('4h')">4H</button>
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('1d')">1D</button>
+                            <button class="timeframe-btn" onclick="app.changeTimeframe('1w')">1W</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div id="mainChart" style="min-height: 450px;"></div>
+                    </div>
+                </div>
+
+                <!-- اندیکاتورهای تکنیکال روی چارت -->
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-chart-bar"></i>
+                            اندیکاتورهای روی نمودار
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="tab" onclick="app.toggleIndicator('rsi')">RSI</button>
+                        <button class="tab" onclick="app.toggleIndicator('macd')">MACD</button>
+                        <button class="tab" onclick="app.toggleIndicator('bb')">باند بولینگر</button>
+                        <button class="tab" onclick="app.toggleIndicator('volume')">حجم</button>
+                        <button class="tab" onclick="app.toggleIndicator('ema')">میانگین متحرک</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- سایدبار سمت راست -->
+            <aside class="right-sidebar">
+                <!-- سیگنال هوشمند -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-robot"></i>
+                            سیگنال هوشمند
+                        </div>
+                    </div>
+
+                    <div class="ai-signal">
+                        <div class="signal-level" id="signalLevel">در حال تحلیل...</div>
+                        <div class="signal-confidence" id="signalConfidence">
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidenceFill"></div>
+                            </div>
+                            <span id="confidenceValue">0%</span>
+                        </div>
+                        
+                        <div class="signal-details">
+                            <div class="signal-item">
+                                <span>نوع سیگنال:</span>
+                                <strong id="signalType">--</strong>
+                            </div>
+                            <div class="signal-item">
+                                <span>هدف قیمت:</span>
+                                <strong id="targetPrice">--</strong>
+                            </div>
+                            <div class="signal-item">
+                                <span>حد ضرر:</span>
+                                <strong id="stopLoss">--</strong>
+                            </div>
+                            <div class="signal-item">
+                                <span>ریسک/سود:</span>
+                                <strong id="riskReward">--</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="signal-reason" id="signalReason">
+                            در حال تحلیل تکنیکال پیشرفته...
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="app.executeTrade('buy')" style="background: var(--up);">
+                                <i class="fas fa-arrow-up"></i>
+                                لانگ (خرید)
+                            </button>
+                            <button class="btn btn-primary" onclick="app.executeTrade('sell')" style="background: var(--down);">
+                                <i class="fas fa-arrow-down"></i>
+                                شورت (فروش)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- پنل معاملاتی -->
+                <div class="trading-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-trade"></i>
+                            پنل معاملاتی
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>مقدار (USDT)</label>
+                        <input type="number" id="tradeAmount" value="100" min="10" step="10">
+                    </div>
+
+                    <div class="input-group">
+                        <label>اهرم</label>
+                        <select id="leverage">
+                            <option value="1">1x</option>
+                            <option value="3">3x</option>
+                            <option value="5" selected>5x</option>
+                            <option value="10">10x</option>
+                            <option value="20">20x</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>حد ضرر (%)</label>
+                        <input type="number" id="stopLossInput" value="2" min="0.5" max="20" step="0.5">
+                    </div>
+
+                    <div class="input-group">
+                        <label>حد سود (%)</label>
+                        <input type="number" id="takeProfitInput" value="5" min="1" max="50" step="0.5">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="app.placeTrade()" style="width: 100%; margin-top: 15px;">
+                        <i class="fas fa-bolt"></i>
+                        ثبت معامله
+                    </button>
+                </div>
+
+                <!-- پوزیشن‌های باز -->
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-list"></i>
+                            پوزیشن‌های باز
+                        </div>
+                    </div>
+                    <div id="openPositions">
+                        <!-- پوزیشن‌ها اینجا نمایش داده می‌شوند -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // کلاس اصلی برنامه
+        class AdvancedTradingTerminal {
+            constructor() {
+                this.engine = new AdvancedTradingEngine();
+                this.currentCoin = null;
+                this.coins = [];
+                this.chart = null;
+                this.timeframe = '1h';
+                this.currentTab = 'all';
+                this.activeIndicators = new Set(['rsi', 'macd']);
+                this.openPositions = [];
+                this.orderBookData = { bids: [], asks: [] };
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.showLoading('در حال راه‌اندازی سیستم...');
+                    await this.testAPIConnections();
+                    await this.loadMarketData();
+                    await this.loadGlobalStats();
+                    this.setupEventListeners();
+                    this.startDataStream();
+                    this.hideLoading();
+                    this.showNotification('سیستم آماده معامله است', 'success');
+                } catch (error) {
+                    console.error('خطا در راه‌اندازی:', error);
+                    this.showError('خطا در اتصال به سرورها');
+                    this.loadFallbackData();
+                }
+            }
+
+            async testAPIConnections() {
+                const tests = [
+                    { name: 'CoinCap', test: this.testCoinCapAPI.bind(this) },
+                    { name: 'CoinGecko', test: this.testCoinGeckoAPI.bind(this) },
+                    { name: 'BitQuery', test: this.testBitQueryAPI.bind(this) }
+                ];
+
+                for (const test of tests) {
+                    try {
+                        await test.test();
+                        console.log(`${test.name} API connected successfully`);
+                    } catch (error) {
+                        console.warn(`${test.name} API failed, using fallback`);
+                    }
+                }
+            }
+
+            async testCoinCapAPI() {
+                const response = await axios.get(`${API_CONFIG.COINCAPIO.BASE_URL}/assets/bitcoin`, {
+                    headers: { 'Authorization': `Bearer ${API_CONFIG.COINCAPIO.KEY}` }
+                });
+                return response.data;
+            }
+
+            async testCoinGeckoAPI() {
+                // تست ساده برای کوین‌گکو
+                const response = await axios.get(`${API_CONFIG.COINGECKO.BASE_URL}/ping`);
+                return response.data;
+            }
+
+            async testBitQueryAPI() {
+                // تست گراف‌کیو‌ال برای بیت‌کوین
+                const query = `{
+                    bitcoin(network: bitcoin) {
+                        transactions(options: {limit: 1}) {
+                            count
+                        }
+                    }
+                }`;
+                
+                const response = await axios.post(API_CONFIG.BITQUERY.BASE_URL, {
+                    query: query
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${API_CONFIG.BITQUERY.KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return response.data;
+            }
+
+            async loadMarketData() {
+                try {
+                    // استفاده از کوین‌گکو برای داده‌های پایه
+                    const response = await axios.get(
+                        `${API_CONFIG.COINGECKO.BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false`,
+                        {
+                            headers: {
+                                'x-cg-demo-api-key': API_CONFIG.COINGECKO.KEY
+                            }
+                        }
+                    );
+                    
+                    this.coins = response.data.map(coin => ({
+                        id: coin.id,
+                        symbol: coin.symbol.toUpperCase(),
+                        name: coin.name,
+                        current_price: coin.current_price,
+                        price_change_percentage_24h: coin.price_change_percentage_24h,
+                        total_volume: coin.total_volume,
+                        high_24h: coin.high_24h,
+                        low_24h: coin.low_24h,
+                        market_cap: coin.market_cap,
+                        image: coin.image,
+                        last_updated: coin.last_updated
+                    }));
+                    
+                    this.renderCoinList();
+                    
+                    if (this.coins.length > 0 && !this.currentCoin) {
+                        await this.selectCoin(this.coins[0]);
+                    }
+                    
+                } catch (error) {
+                    console.error('خطا در دریافت داده‌های بازار:', error);
+                    // استفاده از داده‌های جایگزین
+                    this.loadFallbackData();
+                }
+            }
+
+            async selectCoin(coin) {
+                this.currentCoin = coin;
+                this.updateCoinDisplay();
+                
+                // بارگذاری همزمان داده‌های چارت و دفتر سفارش
+                await Promise.all([
+                    this.loadCoinHistory(coin),
+                    this.loadOrderBook(coin.symbol),
+                    this.generateAdvancedAnalysis(coin)
+                ]);
+            }
+
+            async loadCoinHistory(coin) {
+                try {
+                    // استفاده از کوین‌گکو برای داده‌های تاریخی
+                    const days = this.getDaysForTimeframe();
+                    const response = await axios.get(
+                        `${API_CONFIG.COINGECKO.BASE_URL}/coins/${coin.id}/market_chart?vs_currency=usd&days=${days}&interval=${this.getIntervalForTimeframe()}`,
+                        {
+                            headers: {
+                                'x-cg-demo-api-key': API_CONFIG.COINGECKO.KEY
+                            }
+                        }
+                    );
+                    
+                    if (response.data.prices) {
+                        this.renderAdvancedChart(response.data);
+                    }
+                    
+                } catch (error) {
+                    console.error('خطا در دریافت تاریخچه:', error);
+                    this.renderDemoChart();
+                }
+            }
+
+            async loadOrderBook(symbol) {
+                try {
+                    // استفاده از کوین‌کپ برای دفتر سفارش
+                    const response = await axios.get(
+                        `${API_CONFIG.COINCAPIO.BASE_URL}/assets/${symbol.toLowerCase()}/orderbook?depth=10`,
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${API_CONFIG.COINCAPIO.KEY}`
+                            }
+                        }
+                    );
+                    
+                    if (response.data.data) {
+                        this.orderBookData = response.data.data;
+                        this.renderOrderBook();
+                    }
+                    
+                } catch (error) {
+                    console.error('خطا در دریافت دفتر سفارش:', error);
+                    this.generateDemoOrderBook();
+                }
+            }
+
+            renderAdvancedChart(data) {
+                const prices = data.prices.map(p => ({ x: p[0], y: p[1] }));
+                const volumes = data.total_volumes.map(v => ({ x: v[0], y: v[1] }));
+                
+                // محاسبه اندیکاتورها
+                const priceValues = prices.map(p => p.y);
+                const rsi = this.engine.calculateAdvancedRSI(priceValues);
+                const macd = this.engine.calculateMACD(priceValues);
+                const bb = this.engine.calculateBollingerBands(priceValues);
+                const ema20 = this.engine.calculateEMA(priceValues, 20);
+                const ema50 = this.engine.calculateEMA(priceValues, 50);
+                
+                const series = [{
+                    name: 'قیمت',
+                    type: 'candlestick',
+                    data: this.convertToOHLC(data.prices)
+                }];
+                
+                // اضافه کردن اندیکاتورهای فعال
+                if (this.activeIndicators.has('rsi')) {
+                    series.push({
+                        name: 'RSI',
+                        type: 'line',
+                        data: rsi.values.map((val, i) => ({
+                            x: prices[i]?.x || data.prices[i][0],
+                            y: val
+                        }))
+                    });
+                }
+                
+                if (this.activeIndicators.has('macd')) {
+                    series.push({
+                        name: 'MACD',
+                        type: 'line',
+                        data: macd.histogram.map((val, i) => ({
+                            x: prices[i]?.x || data.prices[i][0],
+                            y: val
+                        }))
+                    });
+                }
+                
+                // ساخت چارت با ApexCharts
+                const options = {
+                    series: series,
+                    chart: {
+                        type: 'candlestick',
+                        height: 450,
+                        background: 'transparent',
+                        toolbar: {
+                            show: true,
+                            tools: {
+                                download: true,
+                                selection: true,
+                                zoom: true,
+                                zoomin: true,
+                                zoomout: true,
+                                pan: true,
+                                reset: true
+                            }
+                        }
+                    },
+                    xaxis: {
+                        type: 'datetime',
+                        labels: {
+                            style: { colors: '#848e9c' }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: { colors: '#848e9c' },
+                            formatter: (val) => `$${val.toLocaleString()}`
+                        },
+                        opposite: true
+                    },
+                    tooltip: {
+                        theme: 'dark',
+                        x: {
+                            format: 'dd MMM yyyy HH:mm'
+                        }
+                    },
+                    plotOptions: {
+                        candlestick: {
+                            colors: {
+                                upward: '#00d395',
+                                downward: '#ff5e5e'
+                            }
+                        }
+                    }
+                };
+                
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+                
+                this.chart = new ApexCharts(document.querySelector("#mainChart"), options);
+                this.chart.render();
+            }
+
+            async generateAdvancedAnalysis(coin) {
+                try {
+                    // دریافت داده‌های اضافی برای تحلیل
+                    const [marketData, onChainData] = await Promise.all([
+                        this.getMarketData(coin.id),
+                        this.getOnChainData(coin.symbol)
+                    ]);
+                    
+                    // تحلیل ترکیبی
+                    const analysis = this.engine.generateAdvancedSignal(
+                        coin.current_price,
+                        marketData,
+                        onChainData,
+                        this.orderBookData
+                    );
+                    
+                    this.updateSignalDisplay(analysis);
+                    
+                } catch (error) {
+                    console.error('خطا در تحلیل:', error);
+                    this.showDemoAnalysis();
+                }
+            }
+
+            async getMarketData(coinId) {
+                // دریافت داده‌های بازار از کوین‌گکو
+                const response = await axios.get(
+                    `${API_CONFIG.COINGECKO.BASE_URL}/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`,
+                    {
+                        headers: {
+                            'x-cg-demo-api-key': API_CONFIG.COINGECKO.KEY
+                        }
+                    }
+                );
+                return response.data.market_data;
+            }
+
+            async getOnChainData(symbol) {
+                try {
+                    // استفاده از بیت‌کووری برای داده‌های آن‌چین
+                    const query = `{
+                        bitcoin(network: bitcoin) {
+                            transactions(date: {since: "${new Date(Date.now() - 86400000).toISOString()}"}) {
+                                count
+                                amount
+                            }
+                        }
+                    }`;
+                    
+                    const response = await axios.post(API_CONFIG.BITQUERY.BASE_URL, {
+                        query: query
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${API_CONFIG.BITQUERY.KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    return response.data.data.bitcoin || {};
+                } catch (error) {
+                    console.error('خطا در دریافت داده آن‌چین:', error);
+                    return {};
+                }
+            }
+
+            // متدهای کمکی
+            getDaysForTimeframe() {
+                const map = {
+                    '1m': 1/24, '5m': 1/12, '15m': 1/6, '30m': 1/3,
+                    '1h': 1, '4h': 7, '1d': 30, '1w': 90
+                };
+                return map[this.timeframe] || 30;
+            }
+
+            getIntervalForTimeframe() {
+                const map = {
+                    '1m': 'minute', '5m': 'minute', '15m': 'minute', '30m': 'minute',
+                    '1h': 'hourly', '4h': 'hourly', '1d': 'daily', '1w': 'daily'
+                };
+                return map[this.timeframe] || 'daily';
+            }
+
+            convertToOHLC(priceData) {
+                // تبدیل داده‌های قیمت به فرمت OHLC
+                const ohlc = [];
+                const interval = this.getIntervalForTimeframe() === 'minute' ? 60000 : 3600000;
+                
+                for (let i = 0; i < priceData.length - 4; i += 4) {
+                    const slice = priceData.slice(i, i + 4);
+                    const prices = slice.map(p => p[1]);
+                    
+                    ohlc.push({
+                        x: slice[0][0],
+                        y: [
+                            prices[0], // Open
+                            Math.max(...prices), // High
+                            Math.min(...prices), // Low
+                            prices[3] // Close
+                        ]
+                    });
+                }
+                
+                return ohlc;
+            }
+
+            updateSignalDisplay(analysis) {
+                const { signal, confidence, type, target, stopLoss, reason, riskReward } = analysis;
+                
+                document.getElementById('signalLevel').textContent = signal;
+                document.getElementById('confidenceValue').textContent = `${confidence}%`;
+                document.getElementById('confidenceFill').style.width = `${confidence}%`;
+                document.getElementById('signalType').textContent = type;
+                document.getElementById('targetPrice').textContent = `$${target.toLocaleString()}`;
+                document.getElementById('stopLoss').textContent = `$${stopLoss.toLocaleString()}`;
+                document.getElementById('riskReward').textContent = riskReward;
+                document.getElementById('signalReason').textContent = reason;
+                
+                // تغییر رنگ بر اساس نوع سیگنال
+                const confidenceFill = document.getElementById('confidenceFill');
+                if (type.includes('خرید')) {
+                    confidenceFill.style.background = 'var(--up)';
+                } else if (type.includes('فروش')) {
+                    confidenceFill.style.background = 'var(--down)';
+                } else {
+                    confidenceFill.style.background = 'var(--accent)';
+                }
+            }
+
+            renderOrderBook() {
+                const container = document.getElementById('orderBook');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                // نمایش سفارشات فروش (بالا)
+                this.orderBookData.asks.slice(0, 10).forEach(order => {
+                    const row = document.createElement('div');
+                    row.className = 'order-row';
+                    row.innerHTML = `
+                        <span class="order-price sell">$${parseFloat(order.price).toFixed(2)}</span>
+                        <span>${parseFloat(order.amount).toFixed(4)}</span>
+                        <span>${(order.price * order.amount).toFixed(2)} USDT</span>
+                    `;
+                    container.appendChild(row);
+                });
+                
+                // جداکننده
+                const separator = document.createElement('div');
+                separator.style = 'text-align: center; padding: 5px; color: var(--primary); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary);';
+                separator.textContent = `اسپرد: ${(this.orderBookData.asks[0]?.price - this.orderBookData.bids[0]?.price).toFixed(2)}`;
+                container.appendChild(separator);
+                
+                // نمایش سفارشات خرید (پایین)
+                this.orderBookData.bids.slice(0, 10).reverse().forEach(order => {
+                    const row = document.createElement('div');
+                    row.className = 'order-row';
+                    row.innerHTML = `
+                        <span class="order-price buy">$${parseFloat(order.price).toFixed(2)}</span>
+                        <span>${parseFloat(order.amount).toFixed(4)}</span>
+                        <span>${(order.price * order.amount).toFixed(2)} USDT</span>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            placeTrade() {
+                const amount = parseFloat(document.getElementById('tradeAmount').value);
+                const leverage = parseInt(document.getElementById('leverage').value);
+                const stopLoss = parseFloat(document.getElementById('stopLossInput').value);
+                const takeProfit = parseFloat(document.getElementById('takeProfitInput').value);
+                
+                if (!this.currentCoin) {
+                    this.showNotification('لطفاً یک ارز انتخاب کنید', 'error');
+                    return;
+                }
+                
+                // دریافت سیگنال فعلی
+                const currentSignal = document.getElementById('signalType').textContent;
+                const signalStrength = parseInt(document.getElementById('confidenceValue').textContent);
+                
+                // ایجاد پوزیشن
+                const position = {
+                    id: Date.now(),
+                    symbol: this.currentCoin.symbol,
+                    type: currentSignal.includes('خرید') ? 'long' : 'short',
+                    entryPrice: this.currentCoin.current_price,
+                    amount: amount,
+                    leverage: leverage,
+                    stopLoss: this.currentCoin.current_price * (1 - (stopLoss / 100) * (currentSignal.includes('خرید') ? 1 : -1)),
+                    takeProfit: this.currentCoin.current_price * (1 + (takeProfit / 100) * (currentSignal.includes('خرید') ? 1 : -1)),
+                    timestamp: new Date().toLocaleTimeString(),
+                    pnl: 0,
+                    pnlPercentage: 0
+                };
+                
+                this.openPositions.push(position);
+                this.updatePositionsDisplay();
+                
+                this.showNotification(`پوزیشن ${position.type} برای ${position.symbol} ثبت شد`, 'success');
+            }
+
+            updatePositionsDisplay() {
+                const container = document.getElementById('openPositions');
+                if (!container) return;
+                
+                if (this.openPositions.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">پوزیشن بازی وجود ندارد</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                this.openPositions.forEach(position => {
+                    // محاسبه سود/زیان فعلی
+                    const currentPrice = this.currentCoin?.current_price || position.entryPrice;
+                    const priceDiff = currentPrice - position.entryPrice;
+                    const pnl = position.type === 'long' ? priceDiff * position.amount * position.leverage : -priceDiff * position.amount * position.leverage;
+                    const pnlPercentage = (pnl / (position.amount * position.leverage)) * 100;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'position-card';
+                    card.innerHTML = `
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong>${position.symbol}</strong>
+                                <span class="position-type ${position.type}">${position.type === 'long' ? '🟢 لانگ' : '🔴 شورت'}</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                ورود: $${position.entryPrice.toFixed(2)} | اهرم: ${position.leverage}x
+                            </div>
+                        </div>
+                        <div style="text-align: left;">
+                            <div class="pnl ${pnl >= 0 ? 'positive' : 'negative'}">
+                                ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT
+                            </div>
+                            <div class="pnl ${pnl >= 0 ? 'positive' : 'negative'}" style="font-size: 12px;">
+                                ${pnlPercentage >= 0 ? '+' : ''}${pnlPercentage.toFixed(2)}%
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+
+            // سایر متدها...
+            changeTimeframe(tf) {
+                this.timeframe = tf;
+                document.querySelectorAll('.timeframe-btn').forEach(btn => 
+                    btn.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                if (this.currentCoin) {
+                    this.loadCoinHistory(this.currentCoin);
+                }
+            }
+
+            toggleIndicator(indicator) {
+                if (this.activeIndicators.has(indicator)) {
+                    this.activeIndicators.delete(indicator);
+                    event.target.classList.remove('active');
+                } else {
+                    this.activeIndicators.add(indicator);
+                    event.target.classList.add('active');
+                }
+                
+                if (this.currentCoin) {
+                    this.loadCoinHistory(this.currentCoin);
+                }
+            }
+
+            executeTrade(type) {
+                const action = type === 'buy' ? 'خرید' : 'فروش';
+                const signal = document.getElementById('signalLevel').textContent;
+                const confidence = document.getElementById('confidenceValue').textContent;
+                
+                this.showNotification(`سیگنال ${action} با اطمینان ${confidence} اجرا شد`, 'success');
+                
+                // در نسخه واقعی، اینجا به API صرافی متصل می‌شود
+                console.log(`Executing ${action} trade for ${this.currentCoin?.symbol} based on signal: ${signal}`);
+            }
+
+            showNotification(message, type = 'info') {
+                // ایجاد نوتیفیکیشن موقت
+                const notification = document.createElement('div');
+                notification.style = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: ${type === 'success' ? 'var(--up)' : type === 'error' ? 'var(--down)' : 'var(--accent)'};
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: var(--radius-md);
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+
+            startDataStream() {
+                // به‌روزرسانی خودکار داده‌ها
+                setInterval(() => {
+                    if (this.currentCoin) {
+                        this.loadMarketData();
+                        this.loadOrderBook(this.currentCoin.symbol);
+                        this.updatePositionsDisplay();
+                    }
+                }, 30000); // هر 30 ثانیه
+                
+                // به‌روزرسانی زمان
+                setInterval(() => {
+                    document.getElementById('lastUpdate').textContent = 
+                        new Date().toLocaleTimeString('fa-IR');
+                }, 1000);
+            }
+
+            // متدهای نمایش و مدیریت خطا
+            showLoading(message) {
+                const loader = document.getElementById('loadingScreen');
+                if (loader) {
+                    loader.querySelector('.loading-text').textContent = message;
+                    loader.classList.remove('hidden');
+                }
+            }
+
+            hideLoading() {
+                const loader = document.getElementById('loadingScreen');
+                if (loader) {
+                    loader.classList.add('hidden');
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }
+
+            showError(message) {
+                this.showNotification(message, 'error');
+                console.error(message);
+            }
+
+            loadFallbackData() {
+                // داده‌های نمونه برای وقتی که APIها کار نمی‌کنند
+                this.coins = [
+                    {
+                        id: 'bitcoin',
+                        symbol: 'BTC',
+                        name: 'Bitcoin',
+                        current_price: 68421.50,
+                        price_change_percentage_24h: 3.24,
+                        total_volume: 32456789012,
+                        high_24h: 69120,
+                        low_24h: 65890,
+                        market_cap: 1350000000000,
+                        last_updated: new Date().toISOString()
+                    },
+                    {
+                        id: 'ethereum',
+                        symbol: 'ETH',
+                        name: 'Ethereum',
+                        current_price: 3500.42,
+                        price_change_percentage_24h: 2.15,
+                        total_volume: 15432987654,
+                        high_24h: 3550,
+                        low_24h: 3400,
+                        market_cap: 420000000000,
+                        last_updated: new Date().toISOString()
+                    }
+                ];
+                
+                this.renderCoinList();
+                if (this.coins.length > 0) {
+                    this.selectCoin(this.coins[0]);
+                }
+            }
+
+            generateDemoOrderBook() {
+                const basePrice = this.currentCoin?.current_price || 50000;
+                this.orderBookData = {
+                    bids: Array.from({length: 10}, (_, i) => ({
+                        price: basePrice * (1 - i * 0.001),
+                        amount: Math.random() * 2
+                    })),
+                    asks: Array.from({length: 10}, (_, i) => ({
+                        price: basePrice * (1 + i * 0.001),
+                        amount: Math.random() * 2
+                    }))
+                };
+                this.renderOrderBook();
+            }
+
+            showDemoAnalysis() {
+                const demoAnalysis = {
+                    signal: 'HOLD ⚖️',
+                    confidence: 50,
+                    type: 'انتظار',
+                    target: this.currentCoin?.current_price || 0,
+                    stopLoss: (this.currentCoin?.current_price || 0) * 0.98,
+                    reason: 'بازار در حال تثبیت است. منتظر سیگنال واضح‌تر بمانید.',
+                    riskReward: '1:2'
+                };
+                this.updateSignalDisplay(demoAnalysis);
+            }
+
+            renderCoinList() {
+                const container = document.getElementById('coinList');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                let filteredCoins = [...this.coins];
+                
+                if (this.currentTab === 'gainers') {
+                    filteredCoins.sort((a, b) => 
+                        (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)
+                    );
+                } else if (this.currentTab === 'losers') {
+                    filteredCoins.sort((a, b) => 
+                        (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0)
+                    );
+                }
+                
+                filteredCoins.forEach(coin => {
+                    const isActive = this.currentCoin && this.currentCoin.id === coin.id;
+                    const change = coin.price_change_percentage_24h || 0;
+                    
+                    const item = document.createElement('div');
+                    item.className = `coin-item ${isActive ? 'active' : ''}`;
+                    item.onclick = () => this.selectCoin(coin);
+                    
+                    // تولید سیگنال سریع برای هر کوین
+                    const quickSignal = this.engine.generateQuickSignal(coin);
+                    
+                    item.innerHTML = `
+                        <div class="coin-icon" style="background: ${quickSignal.color}">
+                            ${coin.symbol.substring(0, 2)}
+                        </div>
+                        <div class="coin-info">
+                            <div class="coin-symbol">${coin.symbol}</div>
+                            <div class="coin-name">${coin.name}</div>
+                            <div style="font-size: 10px; color: ${quickSignal.color}">
+                                ${quickSignal.text}
+                            </div>
+                        </div>
+                        <div class="coin-price">
+                            <div class="coin-price-value">
+                                $${coin.current_price.toLocaleString(undefined, {
+                                    minimumFractionDigits: coin.current_price > 100 ? 0 : 2,
+                                    maximumFractionDigits: coin.current_price > 100 ? 0 : 2
+                                })}
+                            </div>
+                            <div class="coin-change ${change >= 0 ? 'up' : 'down'}">
+                                ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+
+            updateCoinDisplay() {
+                if (!this.currentCoin) return;
+                
+                const coin = this.currentCoin;
+                const change = coin.price_change_percentage_24h || 0;
+                
+                document.getElementById('currentPair').textContent = `${coin.symbol}/USDT`;
+                document.getElementById('currentPrice').textContent = 
+                    `$${coin.current_price.toLocaleString(undefined, {
+                        minimumFractionDigits: coin.current_price > 100 ? 0 : 2,
+                        maximumFractionDigits: coin.current_price > 100 ? 0 : 2
+                    })}`;
+                
+                const changeEl = document.getElementById('priceChange');
+                changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                changeEl.style.color = change >= 0 ? 'var(--up)' : 'var(--down)';
+                
+                document.getElementById('high24h').textContent = 
+                    `$${(coin.high_24h || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+                document.getElementById('low24h').textContent = 
+                    `$${(coin.low_24h || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+            }
+
+            renderDemoChart() {
+                // چارت نمونه در صورت خطا
+                const demoData = Array.from({length: 100}, (_, i) => ({
+                    x: Date.now() - (100 - i) * 3600000,
+                    y: [50000, 51000, 49000, 50500]
+                }));
+                
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+                
+                this.chart = new ApexCharts(document.querySelector("#mainChart"), {
+                    series: [{
+                        name: 'قیمت',
+                        type: 'candlestick',
+                        data: demoData
+                    }],
+                    chart: {
+                        type: 'candlestick',
+                        height: 450,
+                        background: 'transparent'
+                    }
+                });
+                this.chart.render();
+            }
+
+            setupEventListeners() {
+                // جستجو
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        const term = e.target.value.toLowerCase();
+                        document.querySelectorAll('.coin-item').forEach(item => {
+                            const text = item.textContent.toLowerCase();
+                            item.style.display = text.includes(term) ? 'flex' : 'none';
+                        });
+                    });
+                }
+
+                // توقف ضرر و سود
+                document.getElementById('stopLossInput')?.addEventListener('change', (e) => {
+                    const sl = parseFloat(e.target.value);
+                    const tp = parseFloat(document.getElementById('takeProfitInput').value);
+                    
+                    if (sl >= tp) {
+                        this.showNotification('حد ضرر باید کمتر از حد سود باشد', 'error');
+                        e.target.value = (tp - 1).toFixed(1);
+                    }
+                });
+
+                document.getElementById('takeProfitInput')?.addEventListener('change', (e) => {
+                    const tp = parseFloat(e.target.value);
+                    const sl = parseFloat(document.getElementById('stopLossInput').value);
+                    
+                    if (tp <= sl) {
+                        this.showNotification('حد سود باید بیشتر از حد ضرر باشد', 'error');
+                        e.target.value = (sl + 1).toFixed(1);
+                    }
+                });
+            }
+
+            changeTab(tab) {
+                this.currentTab = tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+                this.renderCoinList();
+            }
+        }
+
+        // کلاس موتور معاملاتی پیشرفته
+        class AdvancedTradingEngine {
+            calculateAdvancedRSI(prices, period = 14) {
+                if (!prices || prices.length < period * 2) {
+                    return { values: Array(prices.length).fill(50), oversold: false, overbought: false };
+                }
+                
+                const changes = [];
+                const gains = [];
+                const losses = [];
+                const rsiValues = [];
+                
+                for (let i = 1; i < prices.length; i++) {
+                    changes.push(prices[i] - prices[i - 1]);
+                }
+                
+                for (let i = 0; i < changes.length; i++) {
+                    const gain = changes[i] > 0 ? changes[i] : 0;
+                    const loss = changes[i] < 0 ? Math.abs(changes[i]) : 0;
+                    
+                    if (i < period) {
+                        gains.push(gain);
+                        losses.push(loss);
+                    } else {
+                        const avgGain = (gains[i - 1] * (period - 1) + gain) / period;
+                        const avgLoss = (losses[i - 1] * (period - 1) + loss) / period;
+                        gains.push(avgGain);
+                        losses.push(avgLoss);
+                    }
+                    
+                    if (i >= period - 1) {
+                        const rs = gains[i] / (losses[i] || 0.001);
+                        const rsi = 100 - (100 / (1 + rs));
+                        rsiValues.push(rsi);
+                    }
+                }
+                
+                const currentRSI = rsiValues[rsiValues.length - 1] || 50;
+                
+                return {
+                    values: rsiValues,
+                    current: currentRSI,
+                    oversold: currentRSI < 30,
+                    overbought: currentRSI > 70,
+                    trend: currentRSI > 50 ? 'صعودی' : 'نزولی'
+                };
+            }
+
+            calculateMACD(prices, fast = 12, slow = 26, signal = 9) {
+                if (!prices || prices.length < slow) {
+                    return { histogram: [], signal: [], macd: [], trend: 'خنثی' };
+                }
+                
+                const emaFast = this.calculateEMA(prices, fast);
+                const emaSlow = this.calculateEMA(prices, slow);
+                const macdLine = emaFast - emaSlow;
+                
+                // محاسبه خط سیگنال (EMA از MACD)
+                const macdValues = [];
+                for (let i = 0; i < prices.length - slow; i++) {
+                    const fastSlice = prices.slice(i, i + fast);
+                    const slowSlice = prices.slice(i, i + slow);
+                    const macd = this.calculateEMA(fastSlice, fast) - this.calculateEMA(slowSlice, slow);
+                    macdValues.push(macd);
+                }
+                
+                const signalLine = this.calculateEMA(macdValues.slice(-signal * 2), signal);
+                const histogram = macdLine - signalLine;
+                
+                return {
+                    histogram: [histogram],
+                    signal: [signalLine],
+                    macd: [macdLine],
+                    trend: histogram > 0 ? 'صعودی' : 'نزولی',
+                    crossover: histogram > 0 && macdLine > signalLine ? 'خرید' : 'فروش'
+                };
+            }
+
+            calculateBollingerBands(prices, period = 20, stdDev = 2) {
+                if (!prices || prices.length < period) {
+                    return { upper: [], middle: [], lower: [], bandwidth: 0 };
+                }
+                
+                const middleBand = this.calculateSMA(prices.slice(-period), period);
+                const variance = prices.slice(-period).reduce((sum, price) => {
+                    return sum + Math.pow(price - middleBand, 2);
+                }, 0) / period;
+                
+                const stdDeviation = Math.sqrt(variance);
+                const upperBand = middleBand + (stdDeviation * stdDev);
+                const lowerBand = middleBand - (stdDeviation * stdDev);
+                const bandwidth = ((upperBand - lowerBand) / middleBand) * 100;
+                
+                return {
+                    upper: upperBand,
+                    middle: middleBand,
+                    lower: lowerBand,
+                    bandwidth: bandwidth,
+                    squeeze: bandwidth < 10
+                };
+            }
+
+            calculateEMA(data, period) {
+                if (!data || data.length < period) return 0;
+                const k = 2 / (period + 1);
+                let ema = data[0];
+                for (let i = 1; i < data.length; i++) {
+                    ema = data[i] * k + ema * (1 - k);
+                }
+                return ema;
+            }
+
+            calculateSMA(data, period) {
+                if (!data || data.length < period) return 0;
+                const slice = data.slice(-period);
+                return slice.reduce((a, b) => a + b, 0) / period;
+            }
+
+            generateAdvancedSignal(currentPrice, marketData, onChainData, orderBook) {
+                // تحلیل تکنیکال
+                const rsi = this.calculateAdvancedRSI([currentPrice]);
+                const macd = this.calculateMACD([currentPrice]);
+                const bb = this.calculateBollingerBands([currentPrice]);
+                
+                // تحلیل احساسات بازار
+                const orderBookImbalance = this.calculateOrderBookImbalance(orderBook);
+                const volumeAnalysis = this.analyzeVolume(marketData?.total_volume || 0);
+                const trendStrength = this.calculateTrendStrength([currentPrice]);
+                
+                // ایجاد سیگنال ترکیبی
+                let signal = 'HOLD';
+                let confidence = 50;
+                let type = 'انتظار';
+                let reason = '';
+                
+                // منطق سیگنال‌دهی پیشرفته
+                if (rsi.oversold && macd.trend === 'صعودی' && orderBookImbalance > 0.6) {
+                    signal = 'STRONG BUY 🚀';
+                    confidence = 85;
+                    type = 'خرید قوی';
+                    reason = 'اشباع فروش + سیگنال مثبت MACD + فشار خرید در دفتر سفارش';
+                } 
+                else if (rsi.overbought && macd.trend === 'نزولی' && orderBookImbalance < 0.4) {
+                    signal = 'STRONG SELL 📉';
+                    confidence = 80;
+                    type = 'فروش قوی';
+                    reason = 'اشباع خرید + سیگنال منفی MACD + فشار فروش در دفتر سفارش';
+                }
+                else if (bb.squeeze && trendStrength > 0.7) {
+                    signal = 'BREAKOUT SOON ⚡';
+                    confidence = 75;
+                    type = 'آماده شکست';
+                    reason = 'فشردگی باند بولینگر + روند قوی = احتمال شکست قیمتی بالا';
+                }
+                else {
+                    signal = 'HOLD ⚖️';
+                    confidence = 50;
+                    type = 'انتظار';
+                    reason = 'بازار در حال تثبیت. منتظر سیگنال واضح‌تر بمانید.';
+                }
+                
+                // محاسبه اهداف
+                const target = this.calculateTarget(currentPrice, signal);
+                const stopLoss = this.calculateStopLoss(currentPrice, signal);
+                const riskReward = this.calculateRiskReward(currentPrice, target, stopLoss);
+                
+                return {
+                    signal,
+                    confidence,
+                    type,
+                    target,
+                    stopLoss,
+                    reason,
+                    riskReward,
+                    indicators: { rsi, macd, bb, orderBookImbalance }
+                };
+            }
+
+            calculateOrderBookImbalance(orderBook) {
+                if (!orderBook?.bids || !orderBook?.asks) return 0.5;
+                
+                const totalBidVolume = orderBook.bids.reduce((sum, bid) => sum + bid.amount, 0);
+                const totalAskVolume = orderBook.asks.reduce((sum, ask) => sum + ask.amount, 0);
+                const totalVolume = totalBidVolume + totalAskVolume;
+                
+                return totalVolume > 0 ? totalBidVolume / totalVolume : 0.5;
+            }
+
+            analyzeVolume(volume) {
+                const avgVolume = 1000000000; // میانگین فرضی
+                if (volume > avgVolume * 1.5) return 'بسیار بالا';
+                if (volume > avgVolume) return 'بالا';
+                if (volume > avgVolume * 0.5) return 'متوسط';
+                return 'پایین';
+            }
+
+            calculateTrendStrength(prices) {
+                if (!prices || prices.length < 5) return 0.5;
+                
+                const recentChanges = [];
+                for (let i = 1; i < Math.min(prices.length, 10); i++) {
+                    recentChanges.push(prices[i] - prices[i - 1]);
+                }
+                
+                const positiveChanges = recentChanges.filter(c => c > 0).length;
+                const trendStrength = positiveChanges / recentChanges.length;
+                
+                return Math.abs(trendStrength - 0.5) * 2; // نرمال‌سازی به 0-1
+            }
+
+            calculateTarget(currentPrice, signal) {
+                if (signal.includes('BUY')) {
+                    return currentPrice * 1.05; // هدف 5% برای خرید
+                } else if (signal.includes('SELL')) {
+                    return currentPrice * 0.95; // هدف 5% برای فروش
+                }
+                return currentPrice * 1.02; // هدف خنثی
+            }
+
+            calculateStopLoss(currentPrice, signal) {
+                if (signal.includes('BUY')) {
+                    return currentPrice * 0.98; // استاپ 2% برای خرید
+                } else if (signal.includes('SELL')) {
+                    return currentPrice * 1.02; // استاپ 2% برای فروش
+                }
+                return currentPrice * 0.99; // استاپ خنثی
+            }
+
+            calculateRiskReward(entry, target, stopLoss) {
+                const risk = Math.abs(entry - stopLoss);
+                const reward = Math.abs(target - entry);
+                const ratio = reward / risk;
+                return `1:${ratio.toFixed(1)}`;
+            }
+
+            generateQuickSignal(coin) {
+                const change = coin.price_change_percentage_24h || 0;
+                const volumeRatio = (coin.total_volume || 0) / 1000000000;
+                
+                if (change > 5 && volumeRatio > 1) {
+                    return { text: '🚀 قوی', color: 'var(--up)' };
+                } else if (change > 2) {
+                    return { text: '📈 مثبت', color: 'var(--up)' };
+                } else if (change < -5 && volumeRatio > 1) {
+                    return { text: '📉 قوی', color: 'var(--down)' };
+                } else if (change < -2) {
+                    return { text: '🔻 منفی', color: 'var(--down)' };
+                } else {
+                    return { text: '⚖️ خنثی', color: 'var(--text-secondary)' };
+                }
+            }
+        }
+
+        // راه‌اندازی برنامه
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new AdvancedTradingTerminal();
+            window.app = app;
+            
+            // اضافه کردن استایل‌های انیمیشن
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                    to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+                      </html>
